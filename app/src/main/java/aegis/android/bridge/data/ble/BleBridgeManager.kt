@@ -13,8 +13,8 @@ class BleBridgeManager(context: Context)
         context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
 
-    val scanner = BleScanner(bluetoothAdapter)
-    val connector = BleConnector(context, bluetoothAdapter)
+    val scanner = BleScanner(context, bluetoothAdapter)
+    val connectorGATT = BleConnectorGATT(context, bluetoothAdapter)
 
     fun verifyBluetoothSupport(): Boolean
     {
@@ -35,4 +35,5 @@ class BleBridgeManager(context: Context)
         }
         return true
     }
+
 }

@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 
-class BleConnector(
+class BleConnectorGATT(
         private val context: Context,
         private val bluetoothAdapter: BluetoothAdapter?
 ) {
@@ -24,21 +24,6 @@ class BleConnector(
 
     private val _connectionState = MutableStateFlow(ConnectionState.Disconnected)
     val connectionState = _connectionState.asStateFlow()
-
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    fun connect(address: String)
-    {
-        val device = bluetoothAdapter?.getRemoteDevice(address)
-        if (device == null)
-        {
-            Log.e(TAG, "Device with address $address not found")
-            return
-        }
-
-        _connectionState.value = ConnectionState.Connecting
-        gatt?.close()
-        gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
-    }
 
     private val gattCallback = object : BluetoothGattCallback()
     {
@@ -67,6 +52,24 @@ class BleConnector(
             }
         }
     }
+
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    fun connectToDevice(address: String)
+    {
+        val device = bluetoothAdapter?.getRemoteDevice(address)
+        if (device == null)
+        {
+            Log.e(TAG, "Device with address $address not found")
+            return
+        }
+
+        _connectionState.value = ConnectionState.Connecting
+        gatt?.close()
+        gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+    }
+
+
 
     fun disconnect() {
         gatt?.disconnect()

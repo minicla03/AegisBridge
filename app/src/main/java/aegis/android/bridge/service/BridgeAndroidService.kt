@@ -3,6 +3,7 @@ package aegis.android.bridge.service
 import aegis.android.bridge.data.ble.BleBridgeManager
 import aegis.android.bridge.data.ble.ConnectionState
 import aegis.android.bridge.presentation.activity.BluetoothSetupActivity
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -13,6 +14,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,13 +33,14 @@ class BridgeServiceAndroid: Service()
 
     private val scope = CoroutineScope(Job() + Dispatchers.IO)
 
-    private val TARGET_DEVICE_NAME = ""
-    private val TARGET_DEVICE_MAC: String? = null
+    private val TARGET_DEVICE_NAME = "AegisBracelet"
+    private val TARGET_COMPANY_ID= 0xFFF
 
     inner class LocalBinder : Binder() {
         fun getService(): BridgeServiceAndroid = this@BridgeServiceAndroid
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate() {
         super.onCreate()
@@ -59,6 +62,7 @@ class BridgeServiceAndroid: Service()
         startBleFlow()
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     private fun startBleFlow()
     {
         bleManager.scanner.startScan()
@@ -66,16 +70,23 @@ class BridgeServiceAndroid: Service()
         scope.launch {
             bleManager.scanner.scanResults.collectLatest { result ->
                 val deviceName = result.device.name
+
+                val data = result.scanRecord?.manufacturerSpecificData
+                val companyId = data?.keyAt(0)
+                val payload = data?.valueAt(0)
+
                 val deviceAddress = result.device.address
 
-                val isTarget = (TARGET_DEVICE_MAC?.equals(deviceAddress) == true) ||
+                val isTarget = (TARGET_COMPANY_ID == companyId) ||
                         (deviceName?.contains(TARGET_DEVICE_NAME, ignoreCase = true) == true)
 
-                if (isTarget) {
-                    Log.d(TAG, "Target device found: $deviceName / $deviceAddress")
-                    bleManager.scanner.stopScan()
-                    bleManager.connector.connect(deviceAddress)
+                if (!isTarget) {
+                    Log.d(TAG, "Target device not found)
                 }
+
+                Log.d(TAG, "Target device found: $deviceName / $deviceAddress")
+                bleManager.scanner.stopScan()
+                bleManager.connector.connect(deviceAddress)
             }
         }
 
