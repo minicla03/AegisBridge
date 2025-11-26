@@ -6,21 +6,16 @@ plugins {
 
 android {
     namespace = "aegis.android.bridgeclient"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "aegis.android.bridgeclient"
         minSdk = 25
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        externalNativeBuild {
-            cmake {
-                cppFlags += ""
-            }
-        }
     }
 
     buildTypes {
@@ -41,12 +36,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
     }
 }
 
